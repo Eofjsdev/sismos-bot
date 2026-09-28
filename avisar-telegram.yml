@@ -1,0 +1,40 @@
+name: Avisar actualización en Telegram
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: avisar-telegram
+  cancel-in-progress: false
+
+jobs:
+  avisar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el bot
+        uses: actions/checkout@v4
+        with:
+          repository: cruzangelsaid34/sismos-bot
+          path: bot
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: |
+          pip install requests playwright
+          playwright install --with-deps chromium
+
+      - name: Enviar la actualización a Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MICHIHUB_REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: python bot/send_updates.py
