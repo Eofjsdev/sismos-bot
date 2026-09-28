@@ -19,6 +19,8 @@ Variables de entorno:
 - MICHIHUB_REPO      (opcional; por defecto cruzangelsaid34/Michihub)
 - MICHIHUB_BRANCH    (opcional; por defecto main)
 - TEST_MODE=1        (opcional; envía el último commit sin guardar estado)
+- COMMIT_SHA         (modo push: envía justo el commit de ese push, sin estado)
+- BEFORE_SHA         (modo push: SHA anterior al push, para incluir todos sus commits)
 """
 
 import base64
@@ -84,6 +86,27 @@ def obtener_commits() -> list:
     )
     resp.raise_for_status()
     return resp.json()
+
+
+def commits_del_push(sha: str, antes: str) -> list:
+    """Commits de un push, del más antiguo al más nuevo (máx. 5)."""
+    commits = []
+    if antes and set(antes) != {"0"}:
+        try:
+            resp = requests.get(
+                f"https://api.github.com/repos/{REPO}/compare/{antes}...{sha}",
+                headers=_headers(),
+                timeout=30,
+            )
+            resp.raise_for_status()
+            commits = resp.json().get("commits", [])
+        except Exception as exc:
+            print(f"⚠️ No se pudo comparar {antes[:7]}...{sha[:7]}: {exc}", file=sys.stderr)
+    if not commits:
+        resp = requests.get(f"{API_URL}/{sha}", headers=_headers(), timeout=30)
+        resp.raise_for_status()
+        commits = [resp.json()]
+    return commits[-5:]
 
 
 def obtener_archivos(sha: str) -> list:
@@ -234,6 +257,27 @@ def main():
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     if not token or not chat_id:
         sys.exit("❌ Faltan TELEGRAM_BOT_TOKEN y/o TELEGRAM_CHAT_ID")
+
+    # Modo push: lo dispara el workflow del repo de MichiHub en cada commit.
+    commit_sha = os.environ.get("COMMIT_SHA", "").strip()
+    if commit_sha:
+        try:
+            del_push = commits_del_push(commit_sha, os.environ.get("BEFORE_SHA", "").strip())
+        except Exception as exc:
+            sys.exit(f"❌ No se pudo leer el commit {commit_sha[:7]}: {exc}")
+        fallos = 0
+        with sync_playwright() as p:
+            navegador = p.chromium.launch()
+            for commit in del_push:
+                if publicar_commit(token, chat_id, commit, navegador):
+                    print(f"✅ Enviado: {commit['sha'][:7]}")
+                else:
+                    fallos += 1
+                    print(f"❌ No se pudo enviar: {commit['sha'][:7]}", file=sys.stderr)
+            navegador.close()
+        if fallos:
+            sys.exit(1)
+        return
 
     try:
         commits = obtener_commits()
