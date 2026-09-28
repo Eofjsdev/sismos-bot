@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&family=Playfair+Display:ital,wght@0,700;1,400;1,700&display=swap');
+*{ margin:0; padding:0; box-sizing:border-box; }
+html,body{ width:1080px; height:1350px; }
+body{
+    background-color:#f4f0ea;
+    background-image:
+        radial-gradient(circle at 12% 8%, rgba(176,158,141,0.16) 0%, transparent 42%),
+        radial-gradient(circle at 88% 92%, rgba(176,158,141,0.20) 0%, transparent 46%);
+    font-family:'Nunito', sans-serif;
+    color:#4a4238;
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:70px 90px;
+    text-align:center;
+}
+.marco{
+    position:absolute;
+    inset:34px;
+    border:2px solid rgba(176,158,141,0.55);
+    border-radius:28px;
+    pointer-events:none;
+}
+.paw{
+    position:absolute;
+    font-size:64px;
+    opacity:0.12;
+    color:#b09e8d;
+}
+.p1{ top:100px; left:90px; transform:rotate(-18deg); }
+.p2{ bottom:130px; right:100px; transform:rotate(22deg); font-size:80px; }
+
+.logo-wrap{
+    width:130px;
+    height:130px;
+    border-radius:50%;
+    overflow:hidden;
+    box-shadow:0 12px 28px rgba(138,125,110,0.32);
+    margin-bottom:30px;
+    background:#f4f0ea;
+}
+.logo-wrap img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+.en-vivo{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:#fff;
+    border:1px solid rgba(176,158,141,0.5);
+    border-radius:20px;
+    padding:8px 18px;
+    margin-bottom:18px;
+    font-weight:800;
+    font-size:16px;
+    letter-spacing:2px;
+    color:#a5473c;
+    text-transform:uppercase;
+}
+.punto{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#c0604f;
+}
+
+.kicker{
+    font-weight:800;
+    letter-spacing:4px;
+    text-transform:uppercase;
+    font-size:20px;
+    color:#b09e8d;
+    margin-bottom:22px;
+}
+
+h1{
+    font-family:'Playfair Display', serif;
+    font-weight:700;
+    font-size:64px;
+    line-height:1.15;
+    max-width:860px;
+    color:#4a4238;
+}
+
+.sub{
+    margin-top:26px;
+    font-size:26px;
+    max-width:760px;
+    opacity:0.82;
+    line-height:1.55;
+    display:-webkit-box;
+    -webkit-line-clamp:4;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+}
+
+.archivos{
+    margin-top:34px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    align-items:center;
+}
+.archivo{
+    background:#fff;
+    border:1px solid rgba(176,158,141,0.5);
+    border-radius:16px;
+    padding:10px 22px;
+    font-weight:700;
+    font-size:22px;
+    color:#4a4238;
+}
+.archivo.mas{ background:transparent; border:none; color:#8a7c6c; font-weight:400; }
+
+.pie{
+    margin-top:56px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    font-size:20px;
+    color:#8a7c6c;
+}
+.pie .sep{ opacity:0.5; }
+.pie .marca{
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    font-weight:700;
+    color:#4a4238;
+}
+</style>
+</head>
+<body>
+<div class="marco"></div>
+<span class="paw p1">🐾</span>
+<span class="paw p2">🐾</span>
+
+<div class="logo-wrap"><img src="data:image/png;base64,{{LOGO_B64}}"></div>
+
+<div class="en-vivo"><span class="punto"></span>Nueva actualización</div>
+<div class="kicker">Novedades de MichiHub</div>
+
+<h1 id="titulo">{{TITULO}}</h1>
+<p class="sub" id="descripcion">{{DESCRIPCION}}</p>
+<div class="archivos">{{ARCHIVOS}}</div>
+
+<div class="pie">
+<span>{{AUTOR}}</span>
+<span class="sep">•</span>
+<span>{{FECHA}}</span>
+<span class="sep">•</span>
+<span>#{{SHA}}</span>
+<span class="sep">•</span>
+<span class="marca">MichiHub</span>
+</div>
+
+<script>
+// Achica el titular si es muy largo, para que siempre quepa bien.
+// Se espera a que carguen las fuentes web antes de medir, si no el
+// cálculo sale mal con la fuente de repuesto del sistema.
+function ajustarTitulo(){
+    var el = document.getElementById('titulo');
+    var intentos = 0;
+    while(el.scrollHeight > 360 && intentos < 14){
+        var actual = parseFloat(getComputedStyle(el).fontSize);
+        el.style.fontSize = (actual - 4) + "px";
+        intentos++;
+    }
+    document.body.setAttribute('data-listo', '1');
+}
+if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(ajustarTitulo);
+} else {
+    ajustarTitulo();
+}
+</script>
+</body>
+</html>
